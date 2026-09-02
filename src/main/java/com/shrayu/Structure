@@ -1,0 +1,96 @@
+AuthService
+│
+├── src/main/java/com/shrayu
+│   │
+│   ├── AuthServiceApplication.java
+│   │
+│   ├── controller
+│   │   ├── AuthController.java
+│   │   ├── TokenController.java
+│   │   ├── PasswordController.java
+│   │   ├── VerificationController.java
+│   │   └── OAuth2Controller.java
+│   │
+│   ├── service
+│   │   ├── AuthService.java
+│   │   ├── TokenService.java
+│   │   ├── PasswordService.java
+│   │   ├── VerificationService.java
+│   │   └── OAuth2Service.java
+│   │
+│   ├── serviceImpl
+│   │   ├── AuthServiceImpl.java
+│   │   ├── TokenServiceImpl.java
+│   │   ├── PasswordServiceImpl.java
+│   │   ├── VerificationServiceImpl.java
+│   │   └── OAuth2ServiceImpl.java
+│   │
+│   ├── entity
+│   │   ├── AuthUser.java
+│   │   ├── RefreshToken.java
+│   │   ├── PasswordResetToken.java
+│   │   └── EmailVerificationToken.java
+│   │
+│   ├── repository
+│   │   ├── AuthUserRepository.java
+│   │   ├── RefreshTokenRepository.java
+│   │   ├── PasswordResetTokenRepository.java
+│   │   └── EmailVerificationTokenRepository.java
+│   │
+│   ├── dto
+│   │   │
+│   │   ├── auth
+│   │   │   ├── RegisterRequest.java
+│   │   │   ├── LoginRequest.java
+│   │   │   ├── LoginResponse.java
+│   │   │   ├── RefreshTokenRequest.java
+│   │   │   └── LogoutRequest.java
+│   │   │
+│   │   ├── password
+│   │   │   ├── ForgotPasswordRequest.java
+│   │   │   ├── ResetPasswordRequest.java
+│   │   │   └── ChangePasswordRequest.java
+│   │   │
+│   │   ├── verification
+│   │   │   ├── VerifyEmailRequest.java
+│   │   │   └── ResendVerificationRequest.java
+│   │   │
+│   │   ├── oauth2
+│   │   │   └── OAuth2UserResponse.java
+│   │   │
+│   │   └── user
+│   │       ├── CreateUserRequest.java
+│   │       └── UserResponse.java
+│   │
+│   ├── security
+│   │   ├── SecurityConfig.java
+│   │   ├── JwtAuthenticationFilter.java
+│   │   ├── JwtService.java
+│   │   ├── CustomUserDetailsService.java
+│   │   └── PasswordEncoderConfig.java
+│   │
+│   ├── client
+│   │   ├── UserServiceClient.java
+│   │   └── UserServiceClientFallback.java
+│   │
+│   ├── mapper
+│   │   └── AuthUserMapper.java
+│   │
+│   ├── exception
+│   │   ├── AuthException.java
+│   │   ├── InvalidCredentialsException.java
+│   │   ├── TokenExpiredException.java
+│   │   ├── UserAlreadyExistsException.java
+│   │   ├── EmailNotVerifiedException.java
+│   │   └── GlobalExceptionHandler.java
+│   │
+│   └── config
+│       ├── JwtConfig.java
+│       ├── FeignConfig.java
+│       └── OAuth2Config.java
+│
+├── src/main/resources
+│   ├── application.properties
+│   └── application-dev.properties
+│
+└── pom.xml

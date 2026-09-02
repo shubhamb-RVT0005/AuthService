@@ -1,0 +1,352 @@
+Yes. Since your User Service is now structured, we can build the Auth Service separately.
+
+The important architecture is:
+
+                    ┌─────────────────┐
+                    │   API Gateway   │
+                    └────────┬────────┘
+                             │
+                 ┌───────────┴───────────┐
+                 ↓                       ↓
+          ┌──────────────┐       ┌──────────────┐
+          │ Auth Service │       │ User Service │
+          │              │       │              │
+          │ Login        │       │ User Profile │
+          │ Register     │       │ Address      │
+          │ Password     │       │ Preference   │
+          │ JWT          │       │ Role         │
+          │ Refresh      │       │ Permission   │
+          │ OAuth2       │       │              │
+          └──────┬───────┘       └──────────────┘
+                 │
+                 ↓
+              Auth DB
+1. Auth Service responsibility
+Feature	Auth Service
+Registration	✅
+Login	✅
+Password hashing	✅
+Password verification	✅
+JWT Access Token	✅
+Refresh Token	✅
+Logout	✅
+Token validation	✅
+Forgot Password	✅
+Reset Password	✅
+OAuth2 Login	✅
+Email verification	✅
+User profile	❌ User Service
+Address	❌ User Service
+User preferences	❌ User Service
+Role management	❌ User Service
+Permission management	❌ User Service
+2. Auth Service project structure
+
+I recommend:
+
+AuthService
+└── src/main/java/com/shrayu
+    │
+    ├── AuthServiceApplication.java
+    │
+    ├── controller
+    │   ├── AuthController.java
+    │   ├── PasswordController.java
+    │   └── TokenController.java
+    │
+    ├── service
+    │   ├── AuthService.java
+    │   ├── PasswordService.java
+    │   └── TokenService.java
+    │
+    ├── serviceImpl
+    │   ├── AuthServiceImpl.java
+    │   ├── PasswordServiceImpl.java
+    │   └── TokenServiceImpl.java
+    │
+    ├── entity
+    │   ├── AuthUser.java
+    │   ├── RefreshToken.java
+    │   └── PasswordResetToken.java
+    │
+    ├── repository
+    │   ├── AuthUserRepository.java
+    │   ├── RefreshTokenRepository.java
+    │   └── PasswordResetTokenRepository.java
+    │
+    ├── dto
+    │   ├── auth
+    │   │   ├── RegisterRequest.java
+    │   │   ├── LoginRequest.java
+    │   │   ├── LoginResponse.java
+    │   │   ├── RefreshTokenRequest.java
+    │   │   └── LogoutRequest.java
+    │   │
+    │   └── password
+    │       ├── ForgotPasswordRequest.java
+    │       ├── ResetPasswordRequest.java
+    │       └── ChangePasswordRequest.java
+    │
+    ├── security
+    │   ├── SecurityConfig.java
+    │   ├── JwtAuthenticationFilter.java
+    │   ├── JwtService.java
+    │   └── CustomUserDetailsService.java
+    │
+    ├── mapper
+    │   └── AuthUserMapper.java
+    │
+    ├── exception
+    │   ├── AuthException.java
+    │   ├── InvalidCredentialsException.java
+    │   ├── TokenExpiredException.java
+    │   └── GlobalExceptionHandler.java
+    │
+    └── config
+        └── JwtConfig.java
+3. Auth database
+
+Keep authentication data separate:
+
+Auth DB
+│
+├── auth_user
+│   ├── id
+│   ├── user_id
+│   ├── email
+│   ├── password_hash
+│   ├── enabled
+│   ├── email_verified
+│   ├── account_locked
+│   ├── failed_login_attempts
+│   ├── last_login_at
+│   ├── created_at
+│   └── updated_at
+│
+├── refresh_token
+│   ├── id
+│   ├── user_id
+│   ├── token_hash
+│   ├── expires_at
+│   ├── revoked
+│   ├── created_at
+│   └── revoked_at
+│
+└── password_reset_token
+    ├── id
+    ├── user_id
+    ├── token_hash
+    ├── expires_at
+    ├── used
+    └── created_at
+Important
+
+Don't put:
+
+password
+passwordHash
+jwtSecret
+refreshToken
+
+inside your User Service User entity.
+
+The User Service should not own authentication credentials.
+
+4. Main Auth APIs
+#	Method	Endpoint	Purpose
+1	POST	/api/auth/register	Register account
+2	POST	/api/auth/login	Login
+3	POST	/api/auth/refresh	Refresh access token
+4	POST	/api/auth/logout	Logout
+5	POST	/api/auth/change-password	Change password
+6	POST	/api/auth/forgot-password	Request password reset
+7	POST	/api/auth/reset-password	Reset password
+8	GET	/api/auth/verify-email	Verify email
+9	POST	/api/auth/resend-verification	Resend verification
+10	GET	/api/auth/me	Current authenticated user
+11	GET	/oauth2/authorization/google	Google login
+12	GET	/oauth2/authorization/github	GitHub login
+5. Registration flow
+POST /api/auth/register
+             │
+             ↓
+       AuthController
+             │
+             ↓
+       AuthService
+             │
+       ┌─────┴─────┐
+       ↓           ↓
+ Check email   PasswordEncoder
+       │           │
+       └─────┬─────┘
+             ↓
+        AuthUser
+             │
+             ↓
+       Auth DB save
+             │
+             ↓
+     User Service API
+             │
+             ↓
+       Create User
+
+For registration, we need to decide whether Auth Service creates the User Service record through REST/OpenFeign/event-driven communication. For your current architecture, Auth Service should coordinate authentication while User Service owns the actual user profile record.
+
+6. Login flow
+POST /api/auth/login
+          │
+          ↓
+    AuthController
+          │
+          ↓
+    AuthServiceImpl
+          │
+          ↓
+   Find AuthUser
+          │
+          ↓
+ PasswordEncoder.matches()
+          │
+          ↓
+      Valid?
+      /    \
+    NO      YES
+    ↓        ↓
+  401    Generate JWT
+             │
+       ┌─────┴─────┐
+       ↓           ↓
+ Access Token   Refresh Token
+       │           │
+       └─────┬─────┘
+             ↓
+        LoginResponse
+
+Example request:
+
+{
+  "email": "shubham@example.com",
+  "password": "Password@123"
+}
+
+Response:
+
+{
+  "accessToken": "eyJhbGciOiJIUzI1NiIs...",
+  "refreshToken": "xxxxxxxxxxxxxxxx",
+  "tokenType": "Bearer",
+  "expiresIn": 900
+}
+7. JWT contents
+
+Your access token can contain:
+
+{
+  "sub": "550e8400-e29b-41d4-a716-446655440000",
+  "email": "shubham@example.com",
+  "roles": [
+    "ADMIN"
+  ],
+  "permissions": [
+    "USER_CREATE",
+    "USER_UPDATE"
+  ],
+  "iat": 1756800000,
+  "exp": 1756800900
+}
+
+The sub should represent the user UUID.
+
+8. Authentication request flow after login
+Angular
+   │
+   │ Authorization: Bearer JWT
+   ↓
+API Gateway
+   │
+   ↓
+JWT validation
+   │
+   ├── Invalid → 401
+   │
+   └── Valid
+        │
+        ↓
+   User Service
+        │
+        ↓
+   Controller
+        │
+        ↓
+   Service
+
+For production, JWT validation can be performed at the gateway and/or individual services depending on your security model.
+
+9. Recommended development order
+
+Don't create all Auth Service classes at once.
+
+Follow this order:
+
+PHASE 1
+│
+├── Create AuthService project
+├── Add Maven dependencies
+└── application.properties
+        ↓
+PHASE 2
+│
+├── AuthUser entity
+├── RefreshToken entity
+└── PasswordResetToken entity
+        ↓
+PHASE 3
+│
+├── AuthUserRepository
+├── RefreshTokenRepository
+└── PasswordResetTokenRepository
+        ↓
+PHASE 4
+│
+├── RegisterRequest
+├── LoginRequest
+├── LoginResponse
+├── RefreshTokenRequest
+└── LogoutRequest
+        ↓
+PHASE 5
+│
+├── AuthUserMapper
+└── exceptions
+        ↓
+PHASE 6
+│
+├── AuthService
+├── AuthServiceImpl
+└── PasswordService
+        ↓
+PHASE 7
+│
+├── JwtService
+├── JwtAuthenticationFilter
+└── SecurityConfig
+        ↓
+PHASE 8
+│
+└── AuthController
+        ↓
+PHASE 9
+│
+└── Postman testing
+        ↓
+PHASE 10
+│
+├── API Gateway
+├── Service Registry
+└── Angular integration
+
+Since you were doing the User Service one file at a time, I recommend we do the Auth Service the same way.
+
+First file: pom.xml dependencies for the Auth Service.

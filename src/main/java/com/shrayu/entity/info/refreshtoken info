@@ -1,0 +1,65 @@
+Why these fields?
+RefreshToken
+│
+├── id
+│
+├── authUserId
+│
+├── userId
+│
+├── tokenHash              ← NEVER raw token
+│
+├── expiresAt              ← token lifetime
+│
+├── revoked                ← logout/revocation
+│
+├── revokedAt
+│
+├── replacedByTokenId      ← token rotation
+│
+├── deviceInfo             ← session tracking
+│
+├── ipAddress              ← security audit
+│
+├── createdAt
+└── updatedAt
+Real production refresh flow
+LOGIN
+  │
+  ├── Access Token
+  │      ↓
+  │   short lifetime
+  │
+  └── Refresh Token
+         ↓
+      random secure value
+         ↓
+      SHA-256 hash
+         ↓
+      Save hash in DB
+
+When the client refreshes:
+
+Client
+  │
+  │ refresh token
+  ▼
+Auth Service
+  │
+  ├── hash incoming token
+  │
+  ├── find tokenHash
+  │
+  ├── check revoked
+  │
+  ├── check expiration
+  │
+  └── rotate token
+        │
+        ├── revoke old token
+        │
+        └── create new refresh token
+
+So if an attacker steals a database dump, they don't get directly usable refresh tokens.
+
+One important point: tokenHash should be generated in TokenService, not inside this entity.

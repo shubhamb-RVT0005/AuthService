@@ -1,4 +1,3 @@
-
 package com.shrayu.dto;
 
 import java.util.List;
@@ -7,15 +6,11 @@ import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 @Getter
-@Setter
 @Builder
-@NoArgsConstructor
 @AllArgsConstructor
-public class LoginResponse {
+public class AuthResponse {
 
     private UUID userId;
 
@@ -34,18 +29,18 @@ public class LoginResponse {
     private List<String> permissions;
 }
 
+//
 //{
-//	  "userId": "550e8400-e29b-41d4-a716-446655440000",
+//	  "userId": "7b9f...",
 //	  "username": "shubham",
-//	  "accessToken": "eyJhbGciOiJIUzI1NiJ9...",
-//	  "refreshToken": "a8f72c...",
+//	  "accessToken": "eyJhbGci...",
+//	  "refreshToken": "....",
 //	  "tokenType": "Bearer",
 //	  "expiresIn": 900,
 //	  "roles": [
 //	    "USER"
 //	  ],
 //	  "permissions": [
-//	    "USER_READ",
-//	    "USER_UPDATE"
+//	    "USER_READ"
 //	  ]
 //	}
